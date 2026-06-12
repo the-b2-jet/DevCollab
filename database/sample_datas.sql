@@ -11,10 +11,10 @@ INSERT INTO skills (name) VALUES
   ('Python');
 
 -- sample users
-INSERT INTO users (full_name, email, bio) VALUES
-  ('Abebe test1', 'abebe@example.com', 'Full-stack developer and team lead.'),
-  ('Kebede test2', 'kebede@example.com', 'UI/UX designer.'),
-  ('Natnael test3', 'natnael@example.com', 'Backend engineer. Databases. APIs.');
+INSERT INTO users (full_name, email, bio, password) VALUES
+  ('Abebe test1', 'abebe@example.com', 'Full-stack developer and team lead.', '$2b$10$kS2Ngnce7XvcCRCkyekRg.F1.oFy79byuPB5SjHsBAkELBmRH5hqC'), --password: password1
+  ('Kebede test2', 'kebede@example.com', 'UI/UX designer.', '$2b$10$Qt.Vretk.nEK4YfoKe88oue48PmenUvmt1y41C95rFLJn6LtXHOG6'), -- password: password2
+  ('Natnael test3', 'natnael@example.com', 'Backend engineer. Databases. APIs.', '$2b$10$p9PvPJl9JiM.CzTamPxgBehbKquGKuyI1Xpkcn584Xb32.eJ/VHLa'); -- password: password3
 
 -- users to skills linking
 INSERT INTO user_skills (user_id, skill_id) VALUES
