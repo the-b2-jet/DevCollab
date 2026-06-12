@@ -12,6 +12,7 @@ app.use(express.json());
 
 //Routs
 app.use('/auth', require('./routes/authRoutes'));
+app.use('/projects', require('./routes/projectRoutes'));
 
 app.get('/', (req, res) => {
   res.send('DevCollab is running!');
