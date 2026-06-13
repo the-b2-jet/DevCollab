@@ -1,18 +1,19 @@
 const router = require('express').Router();
 const projectController = require('../controllers/projectController');
 const authMiddleware = require('../middleware/auth');
+const requireProjectOwner = require('../middleware/guard');
 
 // Public routes
 router.get('/', projectController.getAll);
 router.get('/:id', projectController.getById);
 
-// Protected routes (require login)
+// Protected routes (auth required)
 router.post('/', authMiddleware, projectController.create);
-router.put('/:id', authMiddleware, projectController.update);
-router.delete('/:id', authMiddleware, projectController.delete);
+router.put('/:id', authMiddleware, requireProjectOwner, projectController.update);
+router.delete('/:id', authMiddleware, requireProjectOwner, projectController.delete);
 
-// Skill management (protected)
-router.post('/:id/skills', authMiddleware, projectController.addSkill);
-router.delete('/:id/skills/:skillId', authMiddleware, projectController.removeSkill);
+// Skill management on a project (only owner)
+router.post('/:id/skills', authMiddleware, requireProjectOwner, projectController.addSkill);
+router.delete('/:id/skills/:skillId', authMiddleware, requireProjectOwner, projectController.removeSkill);
 
 module.exports = router;
