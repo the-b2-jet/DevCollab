@@ -1,15 +1,28 @@
 const db = require('../config/db');
 
 const Project = {
-  async create({ title, description, duration, owner_id }) {
-    const query = `
-      INSERT INTO projects (title, description, duration, owner_id)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *
-    `;
-    const { rows } = await db.query(query, [title, description, duration, owner_id]);
-    return rows[0];
-  },
+async create(title, description, duration, ownerId) {
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
+
+    const projectQuery = `INSERT INTO projects (title, description, duration, owner_id) VALUES ($1, $2, $3, $4) RETURNING *`;
+    const { rows } = await client.query(projectQuery, [title, description, duration, ownerId]);
+    const project = rows[0];
+
+    // Use the owner_id from the newly created project – guaranteed to be correct
+    const memberQuery = `INSERT INTO project_members (project_id, user_id, role) VALUES ($1, $2, 'Project Lead')`;
+    await client.query(memberQuery, [project.id, project.owner_id]);
+
+    await client.query('COMMIT');
+    return project;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+},
 
   async findAll() {
     const query = `
