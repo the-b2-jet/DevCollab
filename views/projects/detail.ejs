@@ -5,6 +5,10 @@
   <p><strong>Owner:</strong> <%= owner.full_name %> (<%= owner.email %>)</p>
 </div>
 
+<% if (locals.user && locals.user.id === project.owner_id) { %>
+  <p><a href="/projects/<%= project.id %>/applications" class="btn">Manage Applications</a></p>
+<% } %>
+
 <h3>Required Skills</h3>
 <ul>
   <% skills.forEach(skill => { %>
