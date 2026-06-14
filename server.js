@@ -11,6 +11,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 //Routs
+app.use('/', require('./routes/viewRoutes'));
 app.use('/auth', require('./routes/authRoutes'));
 app.use('/projects', require('./routes/projectRoutes'));
 app.use('/skills', require('./routes/skillRoutes'))
@@ -24,6 +25,18 @@ app.get('/', (req, res) => {
     title: 'Home',
     view: 'pages/index'
   })
+});
+
+const jwt = require('jsonwebtoken');
+app.use((req, res, next) => {
+  const authHeader = req.header('Authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
+      res.locals.user = decoded;
+    } catch (e) {}
+  }
+  next();
 });
 
 const PORT = 3000;
