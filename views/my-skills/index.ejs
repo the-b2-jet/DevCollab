@@ -1,0 +1,56 @@
+<h2>My Skills</h2>
+<div id="skills-list" class="grid">
+  <% userSkills.forEach(skill => { %>
+    <div class="card" data-skill-id="<%= skill.id %>">
+      <span><%= skill.name %></span>
+      <button class="btn remove-skill" data-skill-id="<%= skill.id %>">Remove</button>
+    </div>
+  <% }); %>
+</div>
+
+<div class="card">
+  <h4>Add a Skill</h4>
+  <form id="add-skill-form">
+    <div class="form-group">
+      <select id="skill-select">
+        <option value="">Select skill</option>
+        <% allSkills.forEach(skill => { %>
+          <option value="<%= skill.id %>"><%= skill.name %></option>
+        <% }); %>
+      </select>
+    </div>
+    <button type="submit" class="btn">Add Skill</button>
+  </form>
+</div>
+
+<script>
+// Add skill
+document.getElementById('add-skill-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const skillId = document.getElementById('skill-select').value;
+  if (!skillId) return;
+  const res = await fetch('/my-skills', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
+    body: JSON.stringify({ skillId: parseInt(skillId) })
+  });
+  if (res.ok) location.reload();
+  else alert('Failed to add skill');
+});
+
+// Remove skill
+document.querySelectorAll('.remove-skill').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const skillId = btn.dataset.skillId;
+    const res = await fetch('/my-skills/' + skillId, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+    });
+    if (res.ok) location.reload();
+    else alert('Failed to remove skill');
+  });
+});
+</script>
