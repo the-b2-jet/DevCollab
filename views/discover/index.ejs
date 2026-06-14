@@ -1,0 +1,23 @@
+<h2>Discover Projects</h2>
+<form method="GET" action="/discover" class="card">
+  <div class="form-group">
+    <input type="text" name="q" placeholder="Search by title or technology (Node.js, React...)" value="<%= query || '' %>">
+  </div>
+  <button type="submit" class="btn">Search</button>
+</form>
+
+<% if (results) { %>
+  <h3>Results for "<%= query %>"</h3>
+  <div class="grid">
+    <% results.forEach(project => { %>
+      <div class="card">
+        <h4><a href="/projects/<%= project.id %>"><%= project.title %></a></h4>
+        <p><%= project.description %></p>
+        <p><strong>Required skills:</strong> <%= project.skills || 'None listed' %></p>
+      </div>
+    <% }); %>
+    <% if (results.length === 0) { %>
+      <p>No projects found.</p>
+    <% } %>
+  </div>
+<% } %>

@@ -1,0 +1,40 @@
+<h2>Create a New Project</h2>
+<form id="create-project-form" class="card">
+  <div class="form-group">
+    <label for="title">Project Title</label>
+    <input type="text" id="title" name="title" required>
+  </div>
+  <div class="form-group">
+    <label for="description">Description</label>
+    <textarea id="description" name="description" rows="4"></textarea>
+  </div>
+  <div class="form-group">
+    <label for="duration">Duration</label>
+    <input type="text" id="duration" name="duration" placeholder="e.g. 4 weeks">
+  </div>
+  <button type="submit" class="btn">Create</button>
+</form>
+
+<script>
+document.getElementById('create-project-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const title = document.getElementById('title').value;
+  const description = document.getElementById('description').value;
+  const duration = document.getElementById('duration').value;
+  const res = await fetch('/projects', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
+    body: JSON.stringify({ title, description, duration })
+  });
+  const data = await res.json();
+  console.log('Create project response:', data);   // <-- check browser console
+  if (res.ok && data.project && data.project.id) {
+    window.location.href = '/projects/' + data.project.id;
+  } else {
+    alert('Error: ' + (data.error || 'Unknown error'));
+  }
+});
+</script>

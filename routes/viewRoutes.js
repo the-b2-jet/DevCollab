@@ -27,6 +27,11 @@ router.get('/projects', async (req, res) => {
   }
 });
 
+router.get('/projects/new', (req, res) => {
+  if (!res.locals.user) return res.redirect('/login');
+  res.render('layout', { title: 'New Project', view: 'projects/new' });
+});
+
 router.get('/projects/:id', async (req, res) => {
   try {
     const { rows: projectRows } = await pool.query(
@@ -82,11 +87,6 @@ router.get('/projects/:id', async (req, res) => {
     console.error(err);
     res.status(500).send('Server error');
   }
-});
-
-router.get('/projects/new', (req, res) => {
-  if (!res.locals.user) return res.redirect('/login');
-  res.render('layout', { title: 'New Project', view: 'projects/new' });
 });
 
 router.get('/my-skills', async (req, res) => {
