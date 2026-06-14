@@ -1,0 +1,51 @@
+<h2><%= project.title %></h2>
+<div class="card">
+  <p><%= project.description %></p>
+  <p><strong>Duration:</strong> <%= project.duration %></p>
+  <p><strong>Owner:</strong> <%= owner.full_name %> (<%= owner.email %>)</p>
+</div>
+
+<h3>Required Skills</h3>
+<ul>
+  <% skills.forEach(skill => { %>
+    <li><%= skill.name %></li>
+  <% }); %>
+</ul>
+
+<h3>Team Members</h3>
+<ul>
+  <% members.forEach(member => { %>
+    <li><%= member.full_name %> – <%= member.role %></li>
+  <% }); %>
+</ul>
+
+<% if (locals.user && locals.user.id !== project.owner_id) { %>
+  <% if (!isMember) { %>
+    <form action="/applications/project/<%= project.id %>" method="POST" id="apply-form">
+      <textarea name="note" placeholder="Why do you want to join?"></textarea>
+      <button type="submit" class="btn">Apply to Join</button>
+    </form>
+    <script>
+    document.getElementById('apply-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const note = e.target.note.value;
+      const res = await fetch('/applications/project/<%= project.id %>', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({ note })
+      });
+      const data = await res.json();
+      if (data.id) {
+        alert('Application submitted!');
+      } else {
+        alert('Error: ' + (data.error || 'Failed'));
+      }
+    });
+    </script>
+  <% } else { %>
+    <p>You are a member of this project.</p>
+  <% } %>
+<% } %>

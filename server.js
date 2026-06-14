@@ -1,3 +1,4 @@
+const cookieParser = require('cookie-parser');
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
@@ -9,6 +10,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 //Routs
 app.use('/', require('./routes/viewRoutes'));
@@ -25,6 +27,17 @@ app.get('/', (req, res) => {
     title: 'Home',
     view: 'pages/index'
   })
+});
+
+app.use((req, res, next) => {
+  const token = req.cookies?.token;
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      res.locals.user = decoded;   // { id, email }
+    } catch (e) { /* invalid token */ }
+  }
+  next();
 });
 
 const jwt = require('jsonwebtoken');
