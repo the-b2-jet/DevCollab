@@ -20,7 +20,10 @@ app.use('/tasks', require('./routes/taskRoutes'));
 app.use('/applications', require('./routes/applicationRoutes'));
 
 app.get('/', (req, res) => {
-  res.send('DevCollab is running!');
+  res.render('layout',{
+    title: 'Home',
+    view: 'pages/index'
+  })
 });
 
 const PORT = 3000;
