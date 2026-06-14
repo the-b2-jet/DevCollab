@@ -55,7 +55,13 @@
   <div id="task-board">
     <% tasks.forEach(task => { %>
       <div class="card task" data-task-id="<%= task.id %>">
-        <h4><%= task.title %></h4>
+        <h4>
+          <% if (task.status === 'Completed') { %>
+            <s><%= task.title %></s>
+          <% } else { %>
+            <%= task.title %>
+          <% } %>
+        </h4>
         <p><%= task.description || '' %></p>
         <p><strong>Status:</strong> 
           <select class="task-status" data-task-id="<%= task.id %>">
@@ -117,8 +123,12 @@
       document.getElementById('new-task-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const title = document.getElementById('task-title').value;
+        if (!title.trim()) {
+          alert('Task title is required.');
+          return;
+        }
         const description = document.getElementById('task-desc').value;
-        const due_date = document.getElementById('task-due').value;
+        const due_date = document.getElementById('task-due').value || null;
         const assigned_to = document.getElementById('task-assign').value || null;
         const res = await fetch('/tasks/project/<%= project.id %>', {
           method: 'POST',
