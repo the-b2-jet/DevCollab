@@ -111,4 +111,33 @@ router.get('/my-skills', async (req, res) => {
   }
 });
 
+router.get('/discover', async (req, res) => {
+  const query = req.query.q || '';
+  let results = [];
+  if (query.trim()) {
+    try {
+        const { rows } = await pool.query(
+        `SELECT p.id, p.title, p.description, p.created_at,
+                STRING_AGG(s.name, ', ') AS skills
+         FROM projects p
+         LEFT JOIN project_skills ps ON p.id = ps.project_id
+         LEFT JOIN skills s ON ps.skill_id = s.id
+         WHERE p.title ILIKE $1 OR p.description ILIKE $1 OR s.name ILIKE $1
+         GROUP BY p.id, p.created_at
+         ORDER BY p.created_at DESC`,
+        [`%${query}%`]
+      );
+      results = rows;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  res.render('layout', {
+    title: 'Discover',
+    view: 'discover/index',
+    query,
+    results
+  });
+});
+
 module.exports = router;
