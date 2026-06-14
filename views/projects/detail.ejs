@@ -1,0 +1,141 @@
+<h2><%= project.title %></h2>
+<div class="card">
+  <p><%= project.description %></p>
+  <p><strong>Duration:</strong> <%= project.duration %></p>
+  <p><strong>Owner:</strong> <%= owner.full_name %> (<%= owner.email %>)</p>
+</div>
+
+<h3>Required Skills</h3>
+<ul>
+  <% skills.forEach(skill => { %>
+    <li><%= skill.name %></li>
+  <% }); %>
+</ul>
+
+<h3>Team Members</h3>
+<ul>
+  <% members.forEach(member => { %>
+    <li><%= member.full_name %> – <%= member.role %></li>
+  <% }); %>
+</ul>
+
+<% if (locals.user && locals.user.id !== project.owner_id) { %>
+  <% if (!isMember) { %>
+    <form id="apply-form" class="card">
+      <div class="form-group">
+        <label for="apply-note">Why do you want to join?</label>
+        <textarea id="apply-note" name="note" rows="3"></textarea>
+      </div>
+      <button type="submit" class="btn">Apply to Join</button>
+    </form>
+    <script>
+    document.getElementById('apply-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const note = document.getElementById('apply-note').value;
+      const res = await fetch('/applications/project/<%= project.id %>', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({ note })
+      });
+      const data = await res.json();
+      if (data.id) alert('Application submitted!');
+      else alert('Error: ' + (data.error || 'Failed'));
+    });
+    </script>
+  <% } else { %>
+    <p>You are a member of this project.</p>
+  <% } %>
+<% } %>
+
+<% if (locals.user && (isMember || locals.user.id === project.owner_id)) { %>
+  <h3>Task Board</h3>
+  <div id="task-board">
+    <% tasks.forEach(task => { %>
+      <div class="card task" data-task-id="<%= task.id %>">
+        <h4><%= task.title %></h4>
+        <p><%= task.description || '' %></p>
+        <p><strong>Status:</strong> 
+          <select class="task-status" data-task-id="<%= task.id %>">
+            <option value="To Do" <%= task.status === 'To Do' ? 'selected' : '' %>>To Do</option>
+            <option value="In Progress" <%= task.status === 'In Progress' ? 'selected' : '' %>>In Progress</option>
+            <option value="Completed" <%= task.status === 'Completed' ? 'selected' : '' %>>Completed</option>
+          </select>
+        </p>
+        <p><strong>Assigned to:</strong> <%= task.assigned_to_name || 'Unassigned' %></p>
+        <p><strong>Due:</strong> <%= task.due_date ? new Date(task.due_date).toDateString() : 'No due date' %></p>
+      </div>
+    <% }); %>
+  </div>
+
+  <script>
+  document.querySelectorAll('.task-status').forEach(select => {
+    select.addEventListener('change', async (e) => {
+      const taskId = e.target.dataset.taskId;
+      const newStatus = e.target.value;
+      const res = await fetch('/tasks/' + taskId + '/status', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (!res.ok) alert('Failed to update task');
+    });
+  });
+  </script>
+
+  <% if (locals.user.id === project.owner_id) { %>
+    <div class="card">
+      <h4>Add New Task</h4>
+      <form id="new-task-form">
+        <div class="form-group">
+          <input type="text" id="task-title" placeholder="Task title" required>
+        </div>
+        <div class="form-group">
+          <textarea id="task-desc" placeholder="Description" rows="2"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="task-due">Due date</label>
+          <input type="date" id="task-due">
+        </div>
+        <div class="form-group">
+          <label for="task-assign">Assign to</label>
+          <select id="task-assign">
+            <option value="">Unassigned</option>
+            <% members.forEach(m => { %>
+              <option value="<%= m.user_id %>"><%= m.full_name %></option>
+            <% }); %>
+          </select>
+        </div>
+        <button type="submit" class="btn">Create Task</button>
+      </form>
+      <script>
+      document.getElementById('new-task-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('task-title').value;
+        const description = document.getElementById('task-desc').value;
+        const due_date = document.getElementById('task-due').value;
+        const assigned_to = document.getElementById('task-assign').value || null;
+        const res = await fetch('/tasks/project/<%= project.id %>', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          },
+          body: JSON.stringify({ title, description, due_date, assigned_to })
+        });
+        if (res.ok) {
+          location.reload();
+        } else {
+          const data = await res.json();
+          alert('Error: ' + (data.error || 'Failed'));
+        }
+      });
+      </script>
+    </div>
+  <% } %>
+<% } %>

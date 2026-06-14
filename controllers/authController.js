@@ -23,7 +23,7 @@ exports.register = async (req, res) => {
       process.env.JWT_SECRET || 'devcollab_secret',
       { expiresIn: '1d' }
     );
-
+    res.cookie('token', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
     res.status(201).json({
       message: 'User registered successfully',
       token,
@@ -58,7 +58,7 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET || 'devcollab_secret',
       { expiresIn: '1d' }
     );
-
+    res.cookie('token', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
     res.json({
       message: 'Login successful',
       token,

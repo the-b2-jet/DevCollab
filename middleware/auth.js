@@ -2,7 +2,11 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const authMiddleware = (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1];
+  let token = req.cookies?.token;
+  if (!token) {
+    const authHeader = req.header('Authorization');
+    token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+  }
 
   if (!token) {
     return res.status(401).json({ message: 'No token, authorization denied' });

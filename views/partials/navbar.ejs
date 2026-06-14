@@ -1,0 +1,15 @@
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="logo">DevCollab</a>
+    <ul class="nav-links">
+      <li><a href="/projects">Projects</a></li>
+      <% if (locals.user) { %>
+        <li><a href="/my-skills">My Skills</a></li>
+        <li><span>Hello, <%= user.email %></span></li>
+      <% } else { %>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+      <% } %>
+    </ul>
+  </div>
+</nav>
