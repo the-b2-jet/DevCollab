@@ -6,6 +6,7 @@
       <% if (locals.user) { %>
         <li><a href="/my-skills">My Skills</a></li>
         <li><span>Hello, <%= user.email %></span></li>
+        <li><a href="/auth/logout">Logout</a></li>
       <% } else { %>
         <li><a href="/login">Login</a></li>
         <li><a href="/register">Register</a></li>

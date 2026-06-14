@@ -1,0 +1,72 @@
+<h2>Applications for <%= project.title %></h2>
+<a href="/projects/<%= project.id %>" class="btn">← Back to Project</a>
+
+<% if (applications.length === 0) { %>
+  <p>No applications yet.</p>
+<% } else { %>
+  <div class="grid">
+    <% applications.forEach(app => {
+       const userSkills = skillsByUser[app.applicant_id] || [];
+    %>
+      <div class="card" id="app-<%= app.id %>">
+        <h4><%= app.applicant_name %></h4>
+        <p><%= app.applicant_email %></p>
+        <p><strong>Skills:</strong> <%= userSkills.length > 0 ? userSkills.join(', ') : 'None listed' %></p>
+        <p><strong>Note:</strong> <%= app.note || 'No note' %></p>
+        <p><strong>Status:</strong> 
+          <% if (app.status === 'accepted') { %>
+            <span style="color:green;">Accepted</span>
+          <% } else if (app.status === 'rejected') { %>
+            <span style="color:red;">Rejected</span>
+          <% } else { %>
+            <span style="color:orange;">Pending</span>
+          <% } %>
+        </p>
+        <% if (app.status === 'pending') { %>
+          <button class="btn accept-btn" data-app-id="<%= app.id %>">Accept</button>
+          <button class="btn reject-btn" data-app-id="<%= app.id %>">Reject</button>
+        <% } %>
+      </div>
+    <% }); %>
+  </div>
+<% } %>
+
+<script>
+document.querySelectorAll('.accept-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const appId = btn.dataset.appId;
+    const res = await fetch('/applications/' + appId + '/accept', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('token')
+      }
+    });
+    if (res.ok) {
+      location.reload();
+    } else {
+      const data = await res.json();
+      alert('Error: ' + (data.error || 'Failed'));
+    }
+  });
+});
+
+document.querySelectorAll('.reject-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const appId = btn.dataset.appId;
+    const res = await fetch('/applications/' + appId + '/reject', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('token')
+      }
+    });
+    if (res.ok) {
+      location.reload();
+    } else {
+      const data = await res.json();
+      alert('Error: ' + (data.error || 'Failed'));
+    }
+  });
+});
+</script>

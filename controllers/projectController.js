@@ -11,7 +11,7 @@ exports.create = async (req, res) => {
       return res.status(400).json({error: 'Title and description are must!'});
     }
     
-    const project = await Project.create({title, description, duration, owner_id});
+    const project = await Project.create(title, description, duration, owner_id);
     res.status(201).json({message: 'Project Created', project });
   
   } catch (e) {

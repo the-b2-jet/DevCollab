@@ -89,6 +89,57 @@ router.get('/projects/:id', async (req, res) => {
   }
 });
 
+router.get('/projects/:id/applications', async (req, res) => {
+  if (!res.locals.user) return res.redirect('/login');
+
+  const projectId = req.params.id;
+
+  const { rows: ownerRows } = await pool.query(
+    'SELECT owner_id FROM projects WHERE id = $1',
+    [projectId]
+  );
+  if (ownerRows.length === 0) return res.status(404).send('Project not found');
+  if (ownerRows[0].owner_id !== res.locals.user.id) {
+    return res.status(403).send('Only the project owner can view applications');
+  }
+
+  const { rows: applications } = await pool.query(
+    `SELECT a.*, u.full_name AS applicant_name, u.email AS applicant_email
+     FROM applications a
+     JOIN users u ON a.applicant_id = u.id
+     WHERE a.project_id = $1
+     ORDER BY a.created_at DESC`,
+    [projectId]
+  );
+
+  const applicantIds = applications.map(app => app.applicant_id);
+  let skillsByUser = {};
+  if (applicantIds.length > 0) {
+    const { rows: skills } = await pool.query(
+      `SELECT us.user_id, s.name
+       FROM user_skills us
+       JOIN skills s ON us.skill_id = s.id
+       WHERE us.user_id = ANY($1)`,
+      [applicantIds]
+    );
+    skills.forEach(skill => {
+      if (!skillsByUser[skill.user_id]) skillsByUser[skill.user_id] = [];
+      skillsByUser[skill.user_id].push(skill.name);
+    });
+  }
+
+  const { rows: projectRows } = await pool.query('SELECT title FROM projects WHERE id = $1', [projectId]);
+  const project = projectRows[0];
+
+  res.render('layout', {
+    title: 'Applications',
+    view: 'projects/applications',
+    project,
+    applications,
+    skillsByUser
+  });
+});
+   
 router.get('/my-skills', async (req, res) => {
   if (!res.locals.user) return res.redirect('/login');
   try {
