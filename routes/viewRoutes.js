@@ -27,9 +27,15 @@ router.get('/projects', async (req, res) => {
   }
 });
 
-router.get('/projects/new', (req, res) => {
+router.get('/projects/new', async (req, res) => {
   if (!res.locals.user) return res.redirect('/login');
-  res.render('layout', { title: 'New Project', view: 'projects/new' });
+  try {
+    const { rows: allSkills } = await pool.query('SELECT id, name FROM skills ORDER BY name');
+    res.render('layout', { title: 'New Project', view: 'projects/new', allSkills });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
 });
 
 router.get('/projects/:id', async (req, res) => {

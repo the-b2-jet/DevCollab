@@ -12,16 +12,60 @@
     <label for="duration">Duration</label>
     <input type="text" id="duration" name="duration" placeholder="e.g. 4 weeks">
   </div>
-  <button type="submit" class="btn">Create</button>
+
+  <div class="form-group">
+    <label>Required Skills</label>
+    <div id="skills-checkboxes" style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+      <% allSkills.forEach(skill => { %>
+        <label style="margin-right:1rem;">
+          <input type="checkbox" value="<%= skill.id %>" class="skill-checkbox"> <%= skill.name %>
+        </label>
+      <% }); %>
+    </div>
+    <p style="margin-top:0.5rem;">or add a new skill:</p>
+    <div style="display:flex; gap:0.5rem;">
+      <input type="text" id="new-skill-name" placeholder="e.g. Docker">
+      <button type="button" id="create-skill-btn" class="btn">Create & Add</button>
+    </div>
+  </div>
+
+  <button type="submit" class="btn">Create Project</button>
 </form>
 
 <script>
+document.getElementById('create-skill-btn').addEventListener('click', async () => {
+  const name = document.getElementById('new-skill-name').value.trim();
+  if (!name) return alert('Skill name is required');
+  const res = await fetch('/skills', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
+    body: JSON.stringify({ name })
+  });
+  if (!res.ok) { const d = await res.json(); return alert(d.error || 'Failed'); }
+  const data = await res.json();
+  const newSkill = data.skill || data;
+
+  const container = document.getElementById('skills-checkboxes');
+  const label = document.createElement('label');
+  label.style.marginRight = '1rem';
+  label.innerHTML = `<input type="checkbox" value="${newSkill.id}" class="skill-checkbox" checked> ${newSkill.name}`;
+  container.appendChild(label);
+  document.getElementById('new-skill-name').value = '';
+});
+
 document.getElementById('create-project-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const title = document.getElementById('title').value;
   const description = document.getElementById('description').value;
   const duration = document.getElementById('duration').value;
-  const res = await fetch('/projects', {
+  
+  const checkedBoxes = document.querySelectorAll('.skill-checkbox:checked');
+  const skillIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
+
+  const projRes = await fetch('/projects', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -29,12 +73,21 @@ document.getElementById('create-project-form').addEventListener('submit', async 
     },
     body: JSON.stringify({ title, description, duration })
   });
-  const data = await res.json();
-  console.log('Create project response:', data);   // <-- check browser console
-  if (res.ok && data.project && data.project.id) {
-    window.location.href = '/projects/' + data.project.id;
-  } else {
-    alert('Error: ' + (data.error || 'Unknown error'));
+  if (!projRes.ok) { const d = await projRes.json(); return alert(d.error || 'Failed'); }
+  const projData = await projRes.json();
+  const projectId = projData.project.id;
+
+  for (const skillId of skillIds) {
+    await fetch(`/projects/${projectId}/skills`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + localStorage.getItem('token')
+      },
+      body: JSON.stringify({ skillId })
+    });
   }
+
+  window.location.href = '/projects/' + projectId;
 });
 </script>
