@@ -13,7 +13,7 @@ const requireProjectOwner = async (req, res, next) => {
     if (rows.length === 0 ){
       return res.status(404).json({error: 'Project Not Found!'})
     }
-    if (row[0].owner_id !== userId){
+    if (rows[0].owner_id !== userId){
       return res.status(403).json({error: 'Authorization error: User is NOT the Project Owner'});
     }
     

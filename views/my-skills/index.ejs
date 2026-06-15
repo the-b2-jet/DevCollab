@@ -10,25 +10,29 @@
 
 <div class="card">
   <h4>Add a Skill</h4>
-  <form id="add-skill-form">
-    <div class="form-group">
+  <div id="add-skill-container" style="display:flex; gap:0.5rem; align-items:flex-end;">
+    <div class="form-group" style="flex:1;">
+      <label for="skill-select">Choose existing skill</label>
       <select id="skill-select">
-        <option value="">Select skill</option>
+        <option value="">-- Select --</option>
         <% allSkills.forEach(skill => { %>
           <option value="<%= skill.id %>"><%= skill.name %></option>
         <% }); %>
       </select>
     </div>
-    <button type="submit" class="btn">Add Skill</button>
-  </form>
+    <button type="button" id="add-existing-skill" class="btn">Add</button>
+  </div>
+  <p style="margin: 1rem 0;">or create a brand‑new skill</p>
+  <div style="display:flex; gap:0.5rem;">
+    <input type="text" id="new-skill-name" placeholder="e.g. Docker, Figma" style="flex:1;">
+    <button type="button" id="create-new-skill" class="btn">Create & Add</button>
+  </div>
 </div>
 
 <script>
-// Add skill
-document.getElementById('add-skill-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
+document.getElementById('add-existing-skill').addEventListener('click', async () => {
   const skillId = document.getElementById('skill-select').value;
-  if (!skillId) return;
+  if (!skillId) return alert('Please select a skill');
   const res = await fetch('/my-skills', {
     method: 'POST',
     headers: {
@@ -38,10 +42,46 @@ document.getElementById('add-skill-form').addEventListener('submit', async (e) =
     body: JSON.stringify({ skillId: parseInt(skillId) })
   });
   if (res.ok) location.reload();
-  else alert('Failed to add skill');
+  else {
+    const data = await res.json();
+    alert('Error: ' + (data.error || 'Failed'));
+  }
 });
 
-// Remove skill
+document.getElementById('create-new-skill').addEventListener('click', async () => {
+  const name = document.getElementById('new-skill-name').value.trim();
+  if (!name) return alert('Skill name is required');
+
+  const createRes = await fetch('/skills', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
+    body: JSON.stringify({ name })
+  });
+  if (!createRes.ok) {
+    const data = await createRes.json();
+    return alert('Error creating skill: ' + (data.error || 'Failed'));
+  }
+  const newSkill = await createRes.json();
+  const skillId = newSkill.id || newSkill.skill?.id;
+
+  const addRes = await fetch('/my-skills', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('token')
+    },
+    body: JSON.stringify({ skillId })
+  });
+  if (addRes.ok) location.reload();
+  else {
+    const data = await addRes.json();
+    alert('Error adding skill: ' + (data.error || 'Failed'));
+  }
+});
+
 document.querySelectorAll('.remove-skill').forEach(btn => {
   btn.addEventListener('click', async () => {
     const skillId = btn.dataset.skillId;
